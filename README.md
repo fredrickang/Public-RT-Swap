@@ -5,7 +5,7 @@ To appear in 30th IEEE Real-Time Embedded Technology and Applications Symposium 
 
 ## Darknet vs. PyTorch
 RT-Swap based on PyTorch can be found on "main" branch\
-RT-Sawp based on Darknet can be found on "darknet" branch\
+RT-Sawp based on Darknet can be found on "darknet" branch
 
 
 ## Prerequisites
