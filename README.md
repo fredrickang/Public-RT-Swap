@@ -4,7 +4,7 @@ Woosung Kang, Jinkyu Lee, Youngmoon Lee, Sangeun Oh, Kilho Lee, Hoon Sung Chwa
 To appear in 30th IEEE Real-Time Embedded Technology and Applications Symposium (RTAS 2024), Hong Kong, China, May 2024
 
 ## Darknet vs. PyTorch
-Main branch of this repository is based on the PyTorch implementation \\
+Main branch of this repository is based on the PyTorch implementation\
 Darknet version can be found in branch named "darknet"
 
 ## Prerequisites
