@@ -39,7 +39,7 @@ To integrate RT-Swap with PyTorch, replace the original `module.py` with our mod
 
 Debugging is enabled by default in the Makefile, leading to extensive logging. To disable debugging, set `DEBUG=0` in the Makefile.
 
-To customize VMM allocation granularity, adjust the `_min_chunk_sz_` value in the `_Init_` function (line 238).
+To customize VMM allocation granularity, adjust the `min_chunk_sz` value in the `Init` function (line 238).
 
 #### RT-Swap Scheduler
 
