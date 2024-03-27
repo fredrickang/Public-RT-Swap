@@ -27,10 +27,28 @@ Currently, DEBUGGING is enabled in Makefile, RT-Swap library will print out lots
 To disable the DEBUG, set DEBUG=0 in Makefile.
 
 To set customized VMM allocation granularity,\
-set _min_chunk_sz_ value inside of _Init_ function (line: 238) 
+Set _min_chunk_sz_ value inside of _Init_ function (line: 238) 
 
 
 ### RT-Swap Scheduler
+RT-Swap scheduler requires **swap configuration** and **Basic memory info**\
 
+**Swap configuration**
+RT-Swap scheduler requires the path to the configuration file with argument **-cfg_path**\
+Configuration file should contain following information with following formats.
+
+""" modeltype, period, max swap volume, num of swap allocated objects, indexes of swap allocated objects """ **x per task**
+
+Each memory object allocated by DNN task will assign specific index starting from 0.\
+You need to identify which memory objects are assigned to be swapped inside of configuration file.\
+
+***Basic memory info**
+Inside of scheduler_fn.cpp, you need to set a total GPU memory amount by **MEM_LIMIT**.\
+Inside of scheduler_fn.cpp, you need to set a minimum allocation chunk size of VMM by **MIN_CHUNK**.
 
 ## How to Run
+You need to run the scheduler first, before run DNN tasks.
+
+./scheduler -sync "{number of tasks}" -cfg_path "{path to configuration file}" \
+LD_PRELOAD=./library/libcuhook.so python3 test.py
+
