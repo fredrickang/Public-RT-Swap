@@ -23,10 +23,10 @@ To run RT-Swap with PyTorch, you need to replace the original module.py with our
 Path to origin module.py: home/{username}/.local/lib/python{version}/site-packages/torch/nn/module/module.py
 
 ### RT-Swap Library
-Currently, DEBUGGING is enabled in Makefile, RT-Swap library will print out lots of information
+Currently, DEBUGGING is enabled in Makefile, RT-Swap library will print out lots of informatiom.\
 To disable the DEBUG, set DEBUG=0 in Makefile.
 
-To set customized VMM allocation granularity, 
+To set customized VMM allocation granularity,\
 set _min_chunk_sz_ value inside of _Init_ function (line: 238) 
 
 
