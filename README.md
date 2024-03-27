@@ -58,5 +58,5 @@ The scheduler requires a swap configuration and basic memory information to func
 
 Start the scheduler before running DNN tasks:
 
-1. Run the scheduler: `./scheduler -sync "{number of tasks}" -cfg_path "{path to configuration file}"`
+1. Run the scheduler: `./scheduler -sync {number of tasks} -cfg_path {path to configuration file}`
 2. Execute a DNN task: `LD_PRELOAD=./library/libcuhook.so python3 test.py`
