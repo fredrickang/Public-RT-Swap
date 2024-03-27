@@ -12,7 +12,7 @@ Due to the difference in IPC communication between Python and C code, minor part
 Principal components and functionalities are the same.
 
 ## Prerequisites
-RT-Swap is compatible with ML frameworks that support CUDA 10.2 or higher due to the availability of CUDA low-level GPU VMM APIs.\
+RT-Swap is compatible with ML frameworks that support **CUDA 10.2 or higher** due to the availability of CUDA low-level GPU VMM APIs.\
 PyTorch version: 2.1.1 
 
 ## Code Organization
