@@ -41,7 +41,7 @@ if __name__ == '__main__':
     ## Enable RT-Swap component.
     ## Due to the IPC connection issue, rt-swap should be called before pushing any data to GPU.
     ## RT-Swap will automatically sends the model to GPU.
-    model.rt_swap(priority=1, period= 500, model_type=args.model))
+    model.rt_swap(priority=1, period= 500, model_type=args.model)
     
     if torch.cuda.is_available():
         input_batch = input_batch.to('cuda')
