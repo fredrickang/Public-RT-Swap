@@ -171,15 +171,7 @@ size_t swapin(int signum){
         processed_size += min_chunk_sz;
     }
     
-    // // single chunk
-    // CHECK_DRV(cuMemCreate(&pHandle[0], current_swapout, &prop, 0));
-    // CHECK_DRV(cuMemMap(swapspace , current_swapout, 0, pHandle[0], 0));
-    // CHECK_DRV(cuMemSetAccess(swapspace, current_swapout, &accessDesc, 1ULL));
-    // processed_size += current_swapout;
-
-    // DEBUG_PRINT(RED"Swap-In physical allocation: %.4f\n", (end -start)*1000);
     CHECK_CUDA(cudaMemcpy((void *)swapspace, host_pinned_ptr, current_swapout, cudaMemcpyHostToDevice));
-    // DEBUG_PRINT(RED"Copy: %.4f\n", (start - end)*1000);
     current_swapout = 0;
     return processed_size;
 }
@@ -242,7 +234,7 @@ bool Init(){
 
     cuMemGetAllocationGranularity(&min_chunk_sz, &prop, CU_MEM_ALLOC_GRANULARITY_MINIMUM);
 
-    // customized min chunk size
+    //customized min chunk size
     //min_chunk_sz = 2*(1024*1024);
 
     // Registrations 
@@ -253,10 +245,6 @@ bool Init(){
     
     snprintf(request, 30, "/tmp/mm_request_%d",getpid());
     snprintf(decision, 30, "/tmp/mm_decision_%d",getpid());
-    
-    // if( access(request, F_OK) != 0 ) return false;
-    // if( access(decision, F_OK) != 0 ) return false;
-
 
     while((request_fd = open(request,O_WRONLY)) < 0);
     while((decision_fd = open(decision,O_RDONLY)) < 0);
@@ -310,39 +298,9 @@ size_t check_granularity(size_t requested, size_t min_granularity){
 
 
 void Cleanup(){
-
-
     DEBUG_PRINT(BLUE "Cleaning up...\n" RESET);
     pthread_kill(swap_thread_id, SIGTERM);
     pthread_join(swap_thread_id, NULL);
-
-    
-    // fprintf(stderr,"Overhead\n\n");
-    // fprintf(stderr,"init_open_comm\n");
-    // for(int i = 0; i < idx_open_comm; i++){
-    //     fprintf(stderr,"%f\n",init_open_comm[i]);
-    // }
-
-    // fprintf(stderr,"init_thread_gen\n");
-    // for(int i = 0; i < idx_thread_gen; i++){
-    //     fprintf(stderr,"%f\n",init_thread_gen[i]);
-    // }
-
-    // fprintf(stderr,"comm_time\n");
-    // for(int i = 0; i < idx_comm; i++){
-    //     fprintf(stderr,"%f\n",comm_time[i]);
-    // }
-
-    // fprintf(stderr,"update_entry\n");
-    // for(int i = 0; i < idx_update; i++){
-    //     fprintf(stderr,"%f\n",update_entry[i]);
-    // }
-
-    // fprintf(stderr,"consist_main\n");
-    // for(int i = 0; i < idx_consis; i++){
-    //     fprintf(stderr,"%f\n",consist_main[i]);
-    // }
-    
 
     DEBUG_PRINT(BLUE "Swap Thread terminated\n" RESET);
     DEBUG_PRINT(GREEN "==BMW Termination Sequence Done==\n" RESET);
