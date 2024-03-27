@@ -8,18 +8,18 @@ RT-Swap based on PyTorch can be found on "main" branch\
 RT-Sawp based on Darknet can be found on "darknet" branch
 
 ### PyTorch Implementation
-Due to the difference in IPC communication between Python and C code, minor parts (mainly about the IPC communication) are different from the Darknet version.
+Due to the difference in IPC communication between Python and C code, minor parts (mainly about the IPC communication) are different from the Darknet version.\
 Principal components and functionalities are the same.
 
 ## Prerequisites
-RT-Swap is compatible with ML frameworks that support CUDA 10.2 or higher due to the availability of CUDA low-level GPU VMM APIs.
+RT-Swap is compatible with ML frameworks that support CUDA 10.2 or higher due to the availability of CUDA low-level GPU VMM APIs.\
 PyTorch version: 2.1.1 
 
 ## Code Organization
 RT-Swap consists of 3 parts: ML-Framework (ml_framework), RT-Swap Library (library), RT-Swap Scheduler (scheduler)
 
 ### ML-Framework
-To run RT-Swap with PyTorch, you need to replace the original module.py with our module.py (ml_framework/module.py) to enable the IPC communication. 
+To run RT-Swap with PyTorch, you need to replace the original module.py with our module.py (ml_framework/module.py) to enable the IPC communication.\
 Path to origin module.py: home/{username}/.local/lib/python{version}/site-packages/torch/nn/module/module.py
 
 ### RT-Swap Library
