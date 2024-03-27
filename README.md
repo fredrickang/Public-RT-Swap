@@ -13,7 +13,7 @@ Principal components and functionalities are the same.
 
 ## Prerequisites
 RT-Swap is compatible with ML frameworks that support **CUDA 10.2 or higher** due to the availability of CUDA low-level GPU VMM APIs.\
-PyTorch version: 2.1.1 
+Implemented PyTorch version: **2.1.1**
 
 ## Code Organization
 RT-Swap consists of 3 parts: ML-Framework (ml_framework), RT-Swap Library (library), RT-Swap Scheduler (scheduler)
