@@ -19,7 +19,7 @@ Implemented PyTorch version: **2.1.1**
 RT-Swap consists of 3 parts: ML-Framework (ml_framework), RT-Swap Library (library), RT-Swap Scheduler (scheduler)
 
 ### ML-Framework
-To run RT-Swap with PyTorch, you need to replace the original module.py with our module.py (ml_framework/module.py) to enable the IPC communication.\
+To run RT-Swap with PyTorch, you need to **replace the original module.py with our module.py** (ml_framework/module.py) to enable the IPC communication.\
 Path to origin module.py: home/{username}/.local/lib/python{version}/site-packages/torch/nn/module/module.py
 
 ### RT-Swap Library
@@ -27,7 +27,7 @@ Currently, DEBUGGING is enabled in Makefile, RT-Swap library will print out lots
 To disable the DEBUG, set DEBUG=0 in Makefile.
 
 To set customized VMM allocation granularity,\
-Set _min_chunk_sz_ value inside of _Init_ function (line: 238) 
+**Set _min_chunk_sz_ value inside of _Init_ function (line: 238)**
 
 
 ### RT-Swap Scheduler
@@ -37,7 +37,9 @@ RT-Swap scheduler requires **swap configuration** and **Basic memory info**\
 RT-Swap scheduler requires the path to the configuration file with argument **-cfg_path**\
 Configuration file should contain following information with following formats.
 
-""" modeltype, period, max swap volume, num of swap allocated objects, indexes of swap allocated objects """ **x per task**
+""" modeltype, period, max swap volume, num of swap allocated objects, indexes of swap allocated objects """ 
+""" modeltype, period, max swap volume, num of swap allocated objects, indexes of swap allocated objects """ 
+                                          ... per tasks.
 
 Each memory object allocated by DNN task will assign specific index starting from 0.\
 You need to identify which memory objects are assigned to be swapped inside of configuration file.\
