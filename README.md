@@ -4,8 +4,8 @@ Woosung Kang, Jinkyu Lee, Youngmoon Lee, Sangeun Oh, Kilho Lee, Hoon Sung Chwa
 In 30th IEEE Real-Time Embedded Technology and Applications Symposium (RTAS 2024), Hong Kong, China, May 2024
 
 ## Darknet vs. PyTorch
-### RT-Swap based on PyTorch can be found on "main" branch\
-### RT-Sawp based on Darknet can be found on "darknet" branch
+#### RT-Swap based on PyTorch can be found on "main" branch
+#### RT-Sawp based on Darknet can be found on "darknet" branch
 
 ### PyTorch Implementation
 Due to the difference in IPC communication between Python and C code, minor parts (mainly about the IPC communication) are different from the Darknet version.\
