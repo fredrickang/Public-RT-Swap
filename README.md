@@ -37,8 +37,8 @@ RT-Swap scheduler requires **swap configuration** and **Basic memory info**\
 RT-Swap scheduler requires the path to the configuration file with argument **-cfg_path**\
 Configuration file should contain following information with following formats.
 
-""" modeltype, period, max swap volume, num of swap allocated objects, indexes of swap allocated objects """ 
-""" modeltype, period, max swap volume, num of swap allocated objects, indexes of swap allocated objects """ 
+""" modeltype, period, max swap volume, num of swap allocated objects, indexes of swap allocated objects """\
+""" modeltype, period, max swap volume, num of swap allocated objects, indexes of swap allocated objects """ \
                                           ... per tasks.
 
 Each memory object allocated by DNN task will assign specific index starting from 0.\
