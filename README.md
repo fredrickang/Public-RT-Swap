@@ -49,6 +49,6 @@ Inside of scheduler_fn.cpp, you need to set a minimum allocation chunk size of V
 ## How to Run
 You need to run the scheduler first, before run DNN tasks.
 
-./scheduler -sync "{number of tasks}" -cfg_path "{path to configuration file}" \
-LD_PRELOAD=./library/libcuhook.so python3 test.py
+1. ./scheduler -sync "{number of tasks}" -cfg_path "{path to configuration file}"
+2. LD_PRELOAD=./library/libcuhook.so python3 test.py
 
