@@ -61,7 +61,7 @@ __LINE__, __func__, what_time_is_it_now() ,gettid(), ##args)
 
 using namespace std;
 
-static int init = false;
+static int init = 0;
 static int entry_index = 0;
 static int pid = -1;
 static int tid = -1;
@@ -133,9 +133,10 @@ typedef struct _MSG_PACKET_REQUEST{
     size_t size;
 }req_msg;
 
+
 double what_time_is_it_now();
 
-bool Init();
+void Init();
 void Cleanup();
 int SendRequest( void* devPtr, cudaAPI type, size_t size);
 int SendRequest( void* devPtr, cudaAPI type, size_t size, int index);
@@ -152,6 +153,7 @@ size_t swapin(int signum);
 void * check_pointer_arithmetic(void *, const char*);
 void print_va_info(void* );
 
+
 char * getcudaAPIString(cudaAPI type);
 //int floorSearch(void *addr);
 entry floorSearch(void * addr);
@@ -160,9 +162,7 @@ void DEBUG_PRINT_SWAP();
 void DEBUG_PRINT_PAGETABLE();
 void DEBUG_PRINT_ENTRY();
 
-void * lib_handle = dlopen("libcudart.so", RTLD_NOW);
-
 
 /* CUDA memory hook */
-static cudaError_t (*lcudaMalloc)(void **, size_t) = (cudaError_t (*) (void**, size_t))dlsym(lib_handle,"cudaMalloc");
-static cudaError_t (*lcudaFree) (void*) = (cudaError_t (*) (void *))dlsym(lib_handle,"cudaFree");
+static cudaError_t (*lcudaMalloc)(void **, size_t) = (cudaError_t (*) (void**, size_t))dlsym(RTLD_NEXT,"cudaMalloc");
+static cudaError_t (*lcudaFree) (void*) = (cudaError_t (*) (void *))dlsym(RTLD_NEXT,"cudaFree");

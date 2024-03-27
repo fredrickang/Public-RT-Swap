@@ -28,19 +28,21 @@
 #include "curand.h"
 #include "hooklib.hpp"
 
-
 using namespace std;
 
-CUdeviceptr swapspace = 0ULL;
+int non_access_flag = 1; // should be 1 for initial setting // current unified memory version (flag = 0 is correct)
 size_t swap_volume;
+CUdeviceptr swapspace = 0ULL;
 size_t swapspace_pointer = 0;
 size_t physical_pointer = 0;
-size_t current_swapout = 0;
 void * host_pinned_ptr = NULL;
 
+size_t current_swapout = 0;
+
 static inline void
-checkDrvError(CUresult res, const char *tok , const char *file, unsigned line){
-    if(res != CUDA_SUCCESS) {
+checkDrvError(CUresult res, const char *tok, const char *file, unsigned line)
+{
+    if (res != CUDA_SUCCESS) {
         const char *errStr = NULL;
         (void)cuGetErrorString(res, &errStr);
         std::cerr << file << ':' << line << ' ' << tok
@@ -48,28 +50,32 @@ checkDrvError(CUresult res, const char *tok , const char *file, unsigned line){
     }
 }
 
-#define CHECK_DRV(x) checkDrvError(x, #x, __FILE__, __LINE__)
+#define CHECK_DRV(x) checkDrvError(x, #x, __FILE__, __LINE__);
 
+/* =====CUDA Hooking APIs===== */
 
-/* CUDA hooking APIs */
 cudaError_t cudaMalloc(void **devPtr, size_t size){
-    cudaError_t err = cudaSuccess;
+    cudaError_t err;
     if(!init){
-        init = Init();
-        err = lcudaMalloc(devPtr, size);
-        return err;
+        Init();
+        init = 1;
+        return cudaSuccess;
     }
 
-    int isSwap;
+    int isSwap; 
     isSwap = SendRequest(*devPtr, _cudaMalloc_, size);
-    DEBUG_PRINT(BLUE "cudaMalloc[%d] - %lu byte - type: %d\n" RESET, entry_index, size, isSwap);
+    DEBUG_PRINT(BLUE "cudaMalloc[%d] - %lubyte - type: %d\n" RESET, entry_index, size, isSwap);
     if(isSwap == 1){
+        // from swapspace + swapspace_pointer to swapspace + swapspace_pointer + size
+        // check physical memory allocation 
+        // if physical memory is enough pass
+        // else allocate 
+        // physical memory is not enough
         if(physical_pointer < swapspace_pointer + size){
             size_t needed = swapspace_pointer + size - physical_pointer;
-            size_t aligned_sz = ((needed + min_chunk_sz - 1)/min_chunk_sz) * min_chunk_sz;
-            int iter = int(aligned_sz/min_chunk_sz);
-
-            for(int i = 0; i < iter; i++){
+            size_t aligned_sz = ((needed + min_chunk_sz -1)/min_chunk_sz) * min_chunk_sz;
+            int iter = int(aligned_sz/ min_chunk_sz);
+            for(int i = 0; i< iter; i++){
                 CHECK_DRV(cuMemCreate(&pHandle[pHandle_idx], min_chunk_sz, &prop, 0));
                 CHECK_DRV(cuMemMap(swapspace + physical_pointer, min_chunk_sz, 0, pHandle[pHandle_idx], 0));
                 CHECK_DRV(cuMemSetAccess(swapspace + physical_pointer, min_chunk_sz, &accessDesc, 1ULL));
@@ -80,11 +86,17 @@ cudaError_t cudaMalloc(void **devPtr, size_t size){
 
         *devPtr = (void *)swapspace + swapspace_pointer;
         swapspace_pointer += size;
-        err = cudaSuccess;        
+        err = cudaSuccess;
+        
     }
-
     if(isSwap == 0){
         err = lcudaMalloc(devPtr, size);
+        
+    }
+    if(isSwap == -1){
+        CHECK_CUDA(cudaHostAlloc(devPtr, size, cudaHostAllocMapped));
+        add_entry(&non_access_entry_list, entry_index, *devPtr, size);
+        err = cudaSuccess;
     }
 
     if(isSwap != -1) add_entry(&gpu_entry_list, entry_index, *devPtr, size);
@@ -93,13 +105,15 @@ cudaError_t cudaMalloc(void **devPtr, size_t size){
     return err;
 }
 
-cudaError_t cudaFree(void * devPtr){
+
+cudaError_t cudaFree(void* devPtr){ /* free */
     SendRequest(devPtr, _cudaFree_, 0);
     del_entry(&gpu_entry_list, devPtr);
 
     return lcudaFree(devPtr);
 }
 
+/* =====BMW core===== */
 
 void* swapThread(void *vargsp){
     DEBUG_PRINT(RED "Swap thread generated\n" RESET);
@@ -153,11 +167,10 @@ void* swapThread(void *vargsp){
     }
 }
 
-
 /* Swap-in handler */
 size_t swapin(int signum){
     DEBUG_PRINT(GREEN "Swap-in (SIGUSR2) handler callback\n" RESET);
-    DEBUG_PRINT(GREEN "Swap-in Size %lu\n"RESET, current_swapout);
+    DEBUG_PRINT(GREEN "Swap-in Size %lu\n", current_swapout);
     // step 1. create physical chunk
     // step 2. map
     // step 3. copy in
@@ -170,7 +183,6 @@ size_t swapin(int signum){
         CHECK_DRV(cuMemSetAccess(swapspace + offset, min_chunk_sz, &accessDesc, 1ULL));
         processed_size += min_chunk_sz;
     }
-    
     CHECK_CUDA(cudaMemcpy((void *)swapspace, host_pinned_ptr, current_swapout, cudaMemcpyHostToDevice));
     current_swapout = 0;
     return processed_size;
@@ -178,13 +190,13 @@ size_t swapin(int signum){
 
 /* Uncconsecutive Swap out handler */
 size_t swapout(int signum){
-    // if(non_access_flag){
-    //     for(auto iter = non_access_entry_list.begin(); iter != non_access_entry_list.end(); ++iter){
-    //         CHECK_CUDA(cudaFreeHost(iter->second.address));
-    //     }
-    //     non_access_entry_list.empty();
-    //     non_access_flag = 0;
-    // }
+    if(non_access_flag){
+        for(auto iter = non_access_entry_list.begin(); iter != non_access_entry_list.end(); ++iter){
+            CHECK_CUDA(cudaFreeHost(iter->second.address));
+        }
+        non_access_entry_list.empty();
+        non_access_flag = 0;
+    }
     DEBUG_PRINT(GREEN "Swap-out (SIGUSR1) handler callback\n" RESET);
     size_t processed_size = 0;
     size_t swapout_size;
@@ -208,13 +220,31 @@ size_t swapout(int signum){
 }
 
 
-/* BMW Interface */
 
-bool Init(){
+
+
+#ifdef DEBUG2
+void print_va_info(void *devPtr){
+    if(!exist_in_entry(&gpu_entry_list, devPtr)){
+        int closest_idx = floorSearch(devPtr);
+        fprintf(stderr, "%d, %p, %d\n", closest_idx, gpu_entry_list[closest_idx].address, gpu_entry_list[closest_idx].size);
+    }else{
+        fprintf(stderr, "%d, %p, %d\n", find_index_by_ptr(&gpu_entry_list, devPtr), devPtr, gpu_entry_list[find_index_by_ptr(&gpu_entry_list, devPtr)].size);
+    }
+}
+#else
+void print_va_info(void *devPtr){
+
+}
+#endif
+
+
+/* =====BMW Interface===== */
+
+void Init(){
     int ret, runtimeVersion;
-    cudaRuntimeGetVersion(&runtimeVersion);
-    fprintf(stderr,"Current CUDA runtime Version: %d\n", runtimeVersion);
-    
+    sigset_t sigsetmask_main;
+
     CHECK_DRV(cuInit(0));
     CHECK_DRV(cuDevicePrimaryCtxRetain(&ctx, 0));
     CHECK_DRV(cuCtxSetCurrent(ctx));
@@ -234,10 +264,13 @@ bool Init(){
 
     cuMemGetAllocationGranularity(&min_chunk_sz, &prop, CU_MEM_ALLOC_GRANULARITY_MINIMUM);
 
-    //customized min chunk size
-    //min_chunk_sz = 2*(1024*1024);
 
-    // Registrations 
+    // customized min chunk size
+    min_chunk_sz = 2*(1024*1024);
+
+    cudaRuntimeGetVersion(&runtimeVersion);
+    fprintf(stderr,"Current CUDA runtime Version: %d\n", runtimeVersion);
+
     pid = getpid();
 
     char request[30];
@@ -249,7 +282,6 @@ bool Init(){
     while((request_fd = open(request,O_WRONLY)) < 0);
     while((decision_fd = open(decision,O_RDONLY)) < 0);
     DEBUG_PRINT(BLUE "Request/Decision channel opened\n" RESET);
-
 
     atexit(Cleanup);
     DEBUG_PRINT(BLUE "Termination function registered\n" RESET);
@@ -266,10 +298,7 @@ bool Init(){
 
         CHECK_DRV(cuMemAddressReserve(&swapspace, swap_volume, 0, 0, 0));
         DEBUG_PRINT(GREEN"VA space reservation for Swap Done!\n"RESET);
-    }
-
-
-    sigset_t sigsetmask_main;
+    }    
     sigemptyset(&sigsetmask_main);
     
     sigaddset(&sigsetmask_main, SIGUSR1);
@@ -283,8 +312,6 @@ bool Init(){
     DEBUG_PRINT(BLUE "Generating Swap Threads\n" RESET);
 
     DEBUG_PRINT(GREEN "==Initialization Sequence Done==\n" RESET);
-
-    return true;
 }
 
 size_t check_granularity(size_t requested, size_t min_granularity){
@@ -293,9 +320,6 @@ size_t check_granularity(size_t requested, size_t min_granularity){
     }
     return ((requested + min_granularity -1)/min_granularity) * min_granularity;
 }
-
-
-
 
 void Cleanup(){
     DEBUG_PRINT(BLUE "Cleaning up...\n" RESET);
@@ -341,7 +365,6 @@ int SendRequest(void* devPtr, cudaAPI type, size_t size, int index){
 }
 
 void add_entry(map<int,entry> *entry_list, int index, void* devPtr, size_t size){
-
     //DEBUG_PRINT(BLUE "Add: {%d, [%p, %lu]}\n" RESET, index, devPtr, size);
     entry tmp;
     tmp.address = devPtr;
@@ -352,11 +375,9 @@ void add_entry(map<int,entry> *entry_list, int index, void* devPtr, size_t size)
     btmp.index = index;
     btmp.size= size;
     gpu_bentry_list.insert({devPtr,btmp});
-    
 }
 
 void del_entry(map<int,entry> *entry_list, void* devPtr){
-
     DEBUG_PRINT(BLUE "Del: %p\n" RESET, devPtr);
     (*entry_list).erase(find_index_by_ptr(entry_list, devPtr));
 
@@ -374,7 +395,6 @@ bool exist_in_entry(map<int,entry> *entry_list, void *ptr){
 }
 
 void add_swap_entry(map<int,gswap>* entry_list, int index, void* origPrt, void* gpuPtr, void* cpuPtr, size_t size){
-
     DEBUG_PRINT(BLUE "Add (Swap): {%d, [%p, %p, %p, %lu]}\n" RESET, index, origPrt, gpuPtr, cpuPtr, size);
     gswap tmp;
     tmp.origin_address = origPrt;

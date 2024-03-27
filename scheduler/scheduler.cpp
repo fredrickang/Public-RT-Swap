@@ -13,23 +13,23 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-
 #include "scheduler.hpp"
 #include "scheduler_fn.hpp"
 
-#define REGISTRATION strdup("/scheduler")
+#define REGISTRATION strdup("/tmp/scheduler")
 
-char *cfg_path = strdup("rtswap_cfg.txt");
-int Sync = 0;
 using namespace std;
 
 int main(int argc, char **argv){
-    Sync = find_int_arg(argc, argv, "-sync", 0);
-    cfg_path = find_char_arg(argc, argv, "-cfg_path", "rtswap_cfg.txt");
+    int sync = find_int_arg(argc, argv, "-sync", 0);
+    char *cfg_path = find_char_arg(argc, argv, "-cfg_path", "rtswap_cfg.txt");
 
-    int init_sync = Sync;
-    int warmup = Sync;
+    int init_sync = sync;
+    int warmup = sync;
 
+    set_priority(50); 
+    set_affinity(0);
+    
     task_list_t *task_list = create_task_list();
     resource_t *gpu, *init_que, *warmup_que, *swap_in;
     
@@ -46,7 +46,7 @@ int main(int argc, char **argv){
 
     timeval timeout;
     task_info_t *task;
-
+    double start = 0;
     do{
         target_pid = -1;
 
@@ -56,6 +56,7 @@ int main(int argc, char **argv){
         timeout.tv_usec = 1;
 
         if(select(fd_head+1, &readfds, NULL, NULL, NULL)){
+            start = what_time_is_it_now();
             if(FD_ISSET(reg_fd, &readfds)) {
                 check_registration(task_list, reg_fd, gpu);
             }
@@ -100,13 +101,13 @@ int main(int argc, char **argv){
                 if(target_pid != -1) decision_handler(target_pid, task_list);
             }
 
-            if( !(gpu->waiting->count < Sync) && (init_que->waiting->count == 0) && (warmup_que->waiting->count == 0)){
-                if(Sync){
-                    //printShortTasksetInfo(task_list);
+            if( !(gpu->waiting->count < sync) && (init_que->waiting->count == 0) && (warmup_que->waiting->count == 0)){
+                if(sync){
+                    printShortTasksetInfo(task_list);
                     swap_in = create_resource();
                     init_memory_setting(gpu->waiting, task_list, swap_in);
                     send_release_time(task_list, gpu->waiting, swap_in->waiting);
-                    Sync = 0;
+                    sync = 0;
                 }
 
                 if(gpu -> state == IDLE){

@@ -77,9 +77,9 @@ typedef struct queue{
 typedef struct _MSG_PACKET{
     int regist;
     int pid;
-    int period;
+    double period;
     int model_type; /* model type */
-    // int mem_limit;
+    size_t mem_limit;
 }reg_msg;
 
 typedef struct _RESOURCE{

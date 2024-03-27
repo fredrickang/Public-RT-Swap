@@ -13,3 +13,5 @@ libcuhook.so: ./src/cuhooklib.cpp
 
 clean: 
 	rm -f libcuhook.so
+
+

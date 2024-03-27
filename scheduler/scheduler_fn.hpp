@@ -9,7 +9,7 @@
 #include <time.h>
 #include <float.h>
 
-#define DEBUG
+//#define DEBUG
 #define BLUE "\x1b[34m" //info
 #define GREEN "\x1b[32m" // highlight
 #define RED "\x1b[31m" // error
