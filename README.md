@@ -19,29 +19,29 @@ This repository contains the source code for RT-Swap, a system designed to mitig
 
 Due to differences in IPC (Inter-Process Communication) mechanisms between Python and C, minor modifications were made to the IPC communication part of the code. The core components and functionalities remain consistent across both implementations.
 
-### Prerequisites
+## Prerequisites
 
 RT-Swap is compatible with ML frameworks supporting **CUDA 10.2 or higher** due to the requirement for CUDA low-level GPU VMM (Virtual Memory Management) APIs.
 
 - **Implemented PyTorch version:** 2.1.1
 
-### Code Organization
+## Code Organization
 
 RT-Swap is organized into three main parts: ML-Framework (ml_framework), RT-Swap Library (library), and RT-Swap Scheduler (scheduler).
 
-#### ML-Framework
+### ML-Framework
 
 To integrate RT-Swap with PyTorch, replace the original `module.py` with our modified version located at `ml_framework/module.py`. This enables the required IPC communication.
 
 - **Path to the original module.py:** `home/{username}/.local/lib/python{version}/site-packages/torch/nn/module/module.py`
 
-#### RT-Swap Library
+### RT-Swap Library
 
 Debugging is enabled by default in the Makefile, leading to extensive logging. To disable debugging, set `DEBUG=0` in the Makefile.
 
 To customize VMM allocation granularity, adjust the `min_chunk_sz` value in the `Init` function (line 238).
 
-#### RT-Swap Scheduler
+### RT-Swap Scheduler
 
 The scheduler requires a swap configuration and basic memory information to function properly.
 
@@ -54,7 +54,7 @@ The scheduler requires a swap configuration and basic memory information to func
 
 - **Basic Memory Info:** In `scheduler_fn.cpp`, set the total GPU memory limit with `MEM_LIMIT` and the minimum allocation chunk size with `MIN_CHUNK`.
 
-### How to Run
+## How to Run
 
 Start the scheduler before running DNN tasks:
 
