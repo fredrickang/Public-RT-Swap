@@ -30,7 +30,7 @@
 
 using namespace std;
 
-int non_access_flag = 1; // should be 1 for initial setting // current unified memory version (flag = 0 is correct)
+int non_access_flag = 1; // should be 1 for initial setting
 size_t swap_volume;
 CUdeviceptr swapspace = 0ULL;
 size_t swapspace_pointer = 0;
@@ -56,7 +56,8 @@ checkDrvError(CUresult res, const char *tok, const char *file, unsigned line)
 
 cudaError_t cudaMalloc(void **devPtr, size_t size){
     cudaError_t err;
-    if(!init){
+    // In the framework side, there exists dummy cudaMalloc pair for the initialization 
+    if(!init){ 
         Init();
         init = 1;
         return cudaSuccess;
